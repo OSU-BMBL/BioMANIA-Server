@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "biochatter-server"
-version = "0.5.4"
+name = "BioMANIA-Server"
+version = "0.1.0"
 description = "FastAPI server to provide RESTful API for biochatter"
 authors = [
-    "fengsh <shaohong.feng.78@gmail.com>",
-    "Sebastian Lobentanzer <sebastian.lobentanzer@gmail.com>"
+    "fengsh <shaohong.feng.78@gmail.com>"
 ]
 license = "MIT"
 packages = [
