@@ -1,8 +1,10 @@
 import json
 from typing import Optional, Any, List, Annotated, Dict
-
+from fastapi.responses import FileResponse
+from werkzeug.utils import secure_filename
 import uvicorn
-from fastapi import FastAPI, Header, Request
+from fastapi import FastAPI, Header, Request, UploadFile, HTTPException
+from pathlib import Path as PathlibPath
 from starlette.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import atexit
@@ -10,9 +12,11 @@ import logging
 import os
 from pymilvus import MilvusException
 import pymilvus
+from src.log_utils import initialize_logger
 from src.constants import (
     ARGS_CONNECTION_ARGS,
     ERROR_EXCEEDS_TOKEN_LIMIT,
+    ERROR_INVALID_INPUT,
     ERROR_MILVUS_CONNECT_FAILED,
     ERROR_MILVUS_UNKNOWN,
     ERROR_OK,
@@ -51,42 +55,29 @@ from src.llm_auth import (
 )
 from src.job_recycle_conversations import run_scheduled_job_continuously
 from src.token_usage_database import get_token_usage
-from src.utils import need_restrict_usage
+from src.utils import allowed_file, need_restrict_usage
 
-# prepare logger
-logging.basicConfig(level=logging.INFO)
-file_handler = logging.FileHandler("./logs/app.log")
-file_handler.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
-file_handler.setFormatter(formatter)
-stream_handler.setFormatter(formatter)
-root_logger = logging.getLogger()
-root_logger.addHandler(file_handler)
-root_logger.addHandler(stream_handler)
-
-logger = logging.getLogger(__name__)
-
+logger = initialize_logger(
+    "app.log",
+    app_log_name="app",
+    app_log_level=logging.INFO,
+    log_entries={"src": logging.INFO},
+) # logging.getLogger(__name__)
 
 # run scheduled job: recycle unused session
 cease_event = run_scheduled_job_continuously()
 
-
 def onExit():
     cease_event.set()
-
 
 atexit.register(onExit)
 
 load_dotenv()
 app = FastAPI(
     # Initialize FastAPI cache with in-memory backend
-    title="Biochatter server API",
-    version="0.3.1",
-    description="API to interact with biochatter server",
+    title="BioMANIA Server API",
+    version="0.1.0",
+    description="API to interact with BioMANIA Server",
     debug=True,
 )
 
@@ -225,16 +216,15 @@ async def handle(
             modelConfig=modelConfig,
         )
         return {
-            "choices": [
-                {
-                    "index": 0,
-                    "message": {"role": "assistant", "content": msg},
-                    "finish_reason": "stop",
-                }
-            ],
+            "choices": [{
+                "index": 0,
+                "message": {"role": "assistant", "content": msg},
+                "finish_reason": "stop",
+            }],
             "usage": usage,
             "contexts": contexts,
             "code": ERROR_OK,
+            "task_id": None,
         }
     except MilvusException as e:
         if e.code == pymilvus.Status.CONNECT_FAILED:
@@ -419,6 +409,67 @@ def getTokenUsage(
         logger.error(e)
         return {"error": str(e), "code": ERROR_UNKNOWN}
 
+@app.post(
+    '/v1/upload/{session_id}', description="upload file"
+)
+async def upload_file(session_id: str, file: UploadFile):
+    if not file:
+        raise HTTPException(status_code=400, detail="No file sent")
+    if file.filename == '':
+        return {"error": "No selected file", "code": ERROR_INVALID_INPUT}
+    if not allowed_file(file.filename):
+        return {"error": "File type not allowed", "code": ERROR_INVALID_INPUT}
+    
+    try:
+        filename = secure_filename(file.filename)
+        data_folder = os.environ.get("DATA_FOLDER", "./data")
+        session_folder = os.path.join(data_folder, str(session_id))
+        if not os.path.exists(session_folder):
+            os.makedirs(session_folder)
+        file_path = os.path.join(session_folder, filename)
+        with open(file_path, "wb+") as fobj:
+            fobj.write(file.file.read())
+        
+        return {"code": ERROR_OK, "filename": filename, "message": "File uploaded successfully"}
+    except Exception as e:
+        logger.error(str(e))
+        return {"code": ERROR_INVALID_INPUT}
+    
+@app.get(
+    "/v1/download/{session_id}/{filename}", 
+    description="download file",
+    response_class=FileResponse,
+)
+async def download_file(session_id: str, filename: str):
+    try:
+        if ".." in filename or filename.startswith(("/", "\\")):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid filename. Directory traversal is not allowed."
+            )
+
+        data_folder = PathlibPath(os.environ.get("DATA_FOLDER", "./data"))
+        file_path = data_folder / session_id / filename
+        print(f"Attempting to serve file from: {file_path}") # For debugging
+
+        # Check if the file exists and is actually a file (not a directory)
+        if not file_path.exists():
+            print(f"File not found at: {file_path}")
+            raise HTTPException(status_code=404, detail=f"File '{filename}' not found for session '{session_id}'.")
+        if not file_path.is_file():
+            print(f"Path is not a file: {file_path}")
+            raise HTTPException(status_code=400, detail=f"'{filename}' is not a valid file.")
+
+        return FileResponse(
+            path=file_path,
+            filename=filename, # This is what the user's browser will suggest as the download name
+            media_type='application/octet-stream' # Generic binary stream
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}") # Log the error
+        raise HTTPException(status_code=500, detail="An internal server error occurred while trying to download the file.")
 
 if __name__ == "__main__":
     port: int = 5001

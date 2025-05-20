@@ -32,3 +32,7 @@ def need_restrict_usage(client_key: str, model: str) -> Tuple[bool, int]:
     )
     token_usage = get_token_usage(user_name, actual_model)
     return token_usage["total_tokens"] >= limitation, limitation
+
+def allowed_file(filename: str):
+    # TODO: need to implement later
+    return True
