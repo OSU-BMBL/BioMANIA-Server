@@ -274,9 +274,9 @@ class ConversationSession:
 
     def _update_biochatter_agents(
         self,
-        useRAG: bool,
-        useKG: bool,
-        useAutoAgent: bool,
+        useRAG: bool=False,
+        useKG: bool=False,
+        useAutoAgent: bool=False,
         ragConfig: Optional[Dict]=None,
         kgConfig: Optional[Dict]=None,
         oncokbConfig: Optional[Dict]=None,

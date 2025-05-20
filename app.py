@@ -1,6 +1,5 @@
 import json
 from typing import Optional, Any, List, Annotated, Dict
-
 import uvicorn
 from fastapi import FastAPI, Header, Request
 from starlette.middleware.cors import CORSMiddleware
@@ -10,6 +9,7 @@ import logging
 import os
 from pymilvus import MilvusException
 import pymilvus
+from src.log_utils import initialize_logger
 from src.constants import (
     ARGS_CONNECTION_ARGS,
     ERROR_EXCEEDS_TOKEN_LIMIT,
@@ -26,8 +26,6 @@ from src.conversation_manager import (
 )
 
 from src.datatypes import (
-    ChatCompletionsPostModel,
-    AuthTypeEnum, 
     KgConnectionStatusPostModel, 
     RagAllDocumentsPostModel, 
     RagConnectionStatusPostModel, 
@@ -43,7 +41,6 @@ from src.document_embedder import (
 )
 from src.kg_agent import get_connection_status as get_kg_connection_status
 from src.llm_auth import (
-    llm_get_auth_token_limitation,
     llm_get_auth_type,
     llm_get_client_auth,
     llm_get_embedding_function,
@@ -53,40 +50,32 @@ from src.job_recycle_conversations import run_scheduled_job_continuously
 from src.token_usage_database import get_token_usage
 from src.utils import need_restrict_usage
 
-# prepare logger
-logging.basicConfig(level=logging.INFO)
-file_handler = logging.FileHandler("./logs/app.log")
-file_handler.setLevel(logging.INFO)
-stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.INFO)
-formatter = logging.Formatter(
-    "%(asctime)s - %(name)s - %(levelname)s - %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
-file_handler.setFormatter(formatter)
-stream_handler.setFormatter(formatter)
-root_logger = logging.getLogger()
-root_logger.addHandler(file_handler)
-root_logger.addHandler(stream_handler)
+from router import files
 
-logger = logging.getLogger(__name__)
-
+logger = initialize_logger(
+    "app.log",
+    app_log_name="app",
+    app_log_level=logging.INFO,
+    log_entries={
+        "src": logging.INFO,
+        "router": logging.INFO,
+    },
+) # logging.getLogger(__name__)
 
 # run scheduled job: recycle unused session
 cease_event = run_scheduled_job_continuously()
 
-
 def onExit():
     cease_event.set()
-
 
 atexit.register(onExit)
 
 load_dotenv()
 app = FastAPI(
     # Initialize FastAPI cache with in-memory backend
-    title="Biochatter server API",
-    version="0.3.1",
-    description="API to interact with biochatter server",
+    title="BioMANIA Server API",
+    version="0.1.0",
+    description="API to interact with BioMANIA Server",
     debug=True,
 )
 
@@ -225,16 +214,15 @@ async def handle(
             modelConfig=modelConfig,
         )
         return {
-            "choices": [
-                {
-                    "index": 0,
-                    "message": {"role": "assistant", "content": msg},
-                    "finish_reason": "stop",
-                }
-            ],
+            "choices": [{
+                "index": 0,
+                "message": {"role": "assistant", "content": msg},
+                "finish_reason": "stop",
+            }],
             "usage": usage,
             "contexts": contexts,
             "code": ERROR_OK,
+            "task_id": None,
         }
     except MilvusException as e:
         if e.code == pymilvus.Status.CONNECT_FAILED:
@@ -419,6 +407,8 @@ def getTokenUsage(
         logger.error(e)
         return {"error": str(e), "code": ERROR_UNKNOWN}
 
+# include router
+app.include_router(files.router)
 
 if __name__ == "__main__":
     port: int = 5001
