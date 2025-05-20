@@ -1,26 +1,18 @@
-# biochatter-server
+# BioMANIA-Server
 
 This repository contains the FastAPI app to provide a RESTful API for
-[BioChatter](https://github.com/biocypher/biochatter). It is used in the
-[BioChatter Next](https://github.com/biocypher/biochatter-next) web application.
+[BioMANIA-backend](https://github.com/OSU-BMBL/BioMANIA-backend). It is used in the
+[BioMANIA-Next](https://github.com/OSU-BMBL/BioMANIA-Next) web application.
 
 ## Installation
-
-The app is available as a Docker image from
-[Dockerhub](https://hub.docker.com/orgs/biocypher/repositories). To run the
-server, you need to have [Docker](https://www.docker.com/) installed.
-
-```console
-docker run -p 5001:5001 -d biocypher/biochatter-server
-```
 
 ## Local Build
 
 You can also run the following code to build and start the server locally:
 
 ```console
-docker build -t biochatter-server .
-docker run -p 5001:5001 -d biochatter-server
+docker build -t biomania-server .
+docker run -p 5001:5001 -d biomania-server
 ```
 
 ## API docs
