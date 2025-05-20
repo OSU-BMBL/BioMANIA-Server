@@ -29,8 +29,9 @@ ARGS_SPLIT_BY_CHAR = "splitByChar"
 ARGS_DOCIDS_WORKSPACE = "docIdsWorkspace"
 ARGS_USE_REFLEXION = "useReflexion"
 
-DATA_DIR = "DATA_DIR"
+DATA_FOLDER = "DATA_FOLDER"
 AZURE_COMMUNITY = "Azure Gpt Community"
 GPT_COMMUNITY = "Gpt Community"
 
 
+LOGS_FOLDER = "LOGS_FOLDER"

@@ -8,7 +8,7 @@ import logging
 
 from src.constants import (
     AZURE_COMMUNITY,
-    DATA_DIR,
+    DATA_FOLDER,
     GPT_COMMUNITY
 )
 
@@ -43,7 +43,7 @@ def _ensure_azure_token_usage_tables(conn: Optional[Connection]=None):
     pass
 
 def _connect_to_db():
-    db_path = os.environ.get(DATA_DIR, "./data")
+    db_path = os.environ.get(DATA_FOLDER, "./data")
     db_path = os.path.join(db_path, "token_usage.db")
     if not os.path.exists(db_path):
         try:
