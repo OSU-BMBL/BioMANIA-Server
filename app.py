@@ -1,10 +1,7 @@
 import json
 from typing import Optional, Any, List, Annotated, Dict
-from fastapi.responses import FileResponse
-from werkzeug.utils import secure_filename
 import uvicorn
-from fastapi import FastAPI, Header, Request, UploadFile, HTTPException
-from pathlib import Path as PathlibPath
+from fastapi import FastAPI, Header, Request
 from starlette.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import atexit
@@ -16,7 +13,6 @@ from src.log_utils import initialize_logger
 from src.constants import (
     ARGS_CONNECTION_ARGS,
     ERROR_EXCEEDS_TOKEN_LIMIT,
-    ERROR_INVALID_INPUT,
     ERROR_MILVUS_CONNECT_FAILED,
     ERROR_MILVUS_UNKNOWN,
     ERROR_OK,
@@ -30,8 +26,6 @@ from src.conversation_manager import (
 )
 
 from src.datatypes import (
-    ChatCompletionsPostModel,
-    AuthTypeEnum, 
     KgConnectionStatusPostModel, 
     RagAllDocumentsPostModel, 
     RagConnectionStatusPostModel, 
@@ -47,7 +41,6 @@ from src.document_embedder import (
 )
 from src.kg_agent import get_connection_status as get_kg_connection_status
 from src.llm_auth import (
-    llm_get_auth_token_limitation,
     llm_get_auth_type,
     llm_get_client_auth,
     llm_get_embedding_function,
@@ -55,7 +48,7 @@ from src.llm_auth import (
 )
 from src.job_recycle_conversations import run_scheduled_job_continuously
 from src.token_usage_database import get_token_usage
-from src.utils import allowed_file, need_restrict_usage
+from src.utils import need_restrict_usage
 
 from router import files
 
