@@ -77,8 +77,8 @@ def remove_conversation(sessionId: str):
 def chat(
     sessionId: str,
     messages: List[str],
-    useRAG: bool,
-    useKG: bool,
+    useRAG: bool=False,
+    useKG: bool=False,
     useAutoAgent: Optional[bool] = None,
     ragConfig: Optional[Dict]=None,
     kgConfig: Optional[Dict]=None,
