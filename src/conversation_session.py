@@ -151,15 +151,15 @@ class ConversationSession:
         elif modelConfig.chatter_type == AuthTypeEnum.ServerAzureOpenAI:
             logger.info("create AzureGptConversation")
             chatter = AzureGptConversation(
-                deployment_name=os.environ[OPENAI_DEPLOYMENT_NAME],
+                deployment_name=os.environ.get(OPENAI_DEPLOYMENT_NAME, ""),
                 model_name=model,
                 prompts={"rag_agent_prompts": get_rag_agent_prompts()},
-                version=os.environ[OPENAI_API_VERSION],
-                base_url=os.environ[AZURE_OPENAI_ENDPOINT],
+                version=os.environ.get(OPENAI_API_VERSION, ""),
+                base_url=os.environ.get(AZURE_OPENAI_ENDPOINT, ""),
                 update_token_usage=self._update_token_usage,
             )
             user_name = AZURE_COMMUNITY
-            chatter.set_api_key(os.environ[OPENAI_API_KEY], user_name)
+            chatter.set_api_key(os.environ.get(OPENAI_API_KEY, ""), user_name)
         elif modelConfig.chatter_type == AuthTypeEnum.ServerOpenAI:
             logger.info("create GptConversation")
             chatter = GptConversation(
