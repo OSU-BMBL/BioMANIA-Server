@@ -1,4 +1,7 @@
 
+from unittest import mock
+import pytest
+
 from src.conversation_manager import (
     get_conversation, 
     has_conversation,
@@ -12,14 +15,16 @@ def test_parse_api_key():
     res = _parse_api_key("Bearer balahbalah")
     assert res == "balahbalah"
 
+
 def test_get_conversation():
     modelConfig = {
         **defaultModelConfig,
         "chatter_type": "ServerOpenAI",
     }
-    conversation = get_conversation(
-        sessionId="balahbalah", modelConfig=modelConfig,
-    )
+    with mock.patch("src.conversation_session.GptConversation") as mockGptConversation:
+        conversation = get_conversation(
+            sessionId="balahbalah", modelConfig=modelConfig,
+        )
     assert conversation is not None
     assert conversation.sessionData.sessionId == "balahbalah"
     assert conversation.chatter is not None
