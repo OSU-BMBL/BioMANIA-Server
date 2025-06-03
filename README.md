@@ -33,3 +33,29 @@ docker buildx build --tag biocypher/biochatter-server:latest --tag biocypher/bio
 ```
 
 The version on Dockerhub should match the version in the `pyproject.toml` file.
+
+## Work with API Agent
+
+To introduce Scanpy API Agent, we need to create biochatter.RagAgent and inject into conversation:
+
+```python
+from biochatter.rag_agent import RagAgent, RagAgentModeEnum
+
+def _conversation_factory():
+    conversation = GptConversation(
+        model_name="gpt-4o",
+        correct=False,
+        prompts={},
+    )
+    conversation.set_api_key(os.getenv("OPENAI_API_KEY"), user="test")
+    return conversation
+
+api_agent = RagAgent(
+    mode=RagAgentModeEnum.API_SCANPY,
+    conversation_factory=_create_conversation,
+    use_prompt=True,
+)
+chatter.set_rag_agent(api_agent)
+
+response = chatter.query(text)
+```
