@@ -33,7 +33,7 @@ from src.llm_auth import (
     llm_get_user_name_by_AuthType,
 )
 from src.token_usage_database import update_token_usage
-from src.utils import get_rag_agent_prompts
+from src.utils import get_rag_agent_prompts, post_process_context
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,9 @@ class ConversationSession:
                 auth_type = self.sessionData.modelConfig.chatter_type
                 user_name = session_id if auth_type is AuthTypeEnum.ClientOpenAI else GPT_COMMUNITY
                 self.chatter.set_api_key(api_key, user_name)
+        
+        # test. fengsh: 2025-06-02
+
         self._update_biochatter_agents(
             useRAG=useRAG,
             ragConfig=ragConfig,
@@ -123,6 +126,7 @@ class ConversationSession:
         try:
             (msg, usage, _) = self.chatter.query(text)
             contexts = self.chatter.get_last_injected_context()
+            contexts = post_process_context(self.sessionData.sessionId, contexts)
             return (msg, usage, contexts)
         except Exception as e:
             logger.error(e)
@@ -147,15 +151,15 @@ class ConversationSession:
         elif modelConfig.chatter_type == AuthTypeEnum.ServerAzureOpenAI:
             logger.info("create AzureGptConversation")
             chatter = AzureGptConversation(
-                deployment_name=os.environ[OPENAI_DEPLOYMENT_NAME],
+                deployment_name=os.environ.get(OPENAI_DEPLOYMENT_NAME, ""),
                 model_name=model,
                 prompts={"rag_agent_prompts": get_rag_agent_prompts()},
-                version=os.environ[OPENAI_API_VERSION],
-                base_url=os.environ[AZURE_OPENAI_ENDPOINT],
+                version=os.environ.get(OPENAI_API_VERSION, ""),
+                base_url=os.environ.get(AZURE_OPENAI_ENDPOINT, ""),
                 update_token_usage=self._update_token_usage,
             )
             user_name = AZURE_COMMUNITY
-            chatter.set_api_key(os.environ[OPENAI_API_KEY], user_name)
+            chatter.set_api_key(os.environ.get(OPENAI_API_KEY, ""), user_name)
         elif modelConfig.chatter_type == AuthTypeEnum.ServerOpenAI:
             logger.info("create GptConversation")
             chatter = GptConversation(

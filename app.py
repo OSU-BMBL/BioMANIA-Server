@@ -50,7 +50,7 @@ from src.job_recycle_conversations import run_scheduled_job_continuously
 from src.token_usage_database import get_token_usage
 from src.utils import need_restrict_usage
 
-from router import files
+from router import files, tasks
 
 logger = initialize_logger(
     "app.log",
@@ -409,6 +409,7 @@ def getTokenUsage(
 
 # include router
 app.include_router(files.router)
+app.include_router(tasks.router)
 
 if __name__ == "__main__":
     port: int = 5001

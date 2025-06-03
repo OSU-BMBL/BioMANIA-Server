@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "biomania-server"
+name = "BioMANIA-Server"
 version = "0.1.0"
-description = "FastAPI server to provide RESTful API for BioMANIA"
+description = "FastAPI server to provide RESTful API for biochatter"
 authors = [
     "fengsh <shaohong.feng.78@gmail.com>"
 ]
@@ -23,12 +23,17 @@ langchain = "^0.3.25"
 langchain-community = "^0.3.24"
 langchain-openai = "^0.3.5"
 biomania-backend = "^0.10.2"
+jupyter-core = "^5.8.1"
+nbconvert = "^7.16.6"
+nbformat = "^5.10.4"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"
 bump2version = "^1.0.1"
 coverage = "^7.6.0"
 coverage-badge = "^1.1.1"
+beautifulsoup4 = "^4.13.4"
+pytest-cov = "^6.1.1"
 
 [build-system]
 requires = ["poetry-core"]
