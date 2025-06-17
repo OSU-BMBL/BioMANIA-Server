@@ -11,7 +11,7 @@ from src.constants import TOKEN_DAILY_LIMITATION
 from src.datatypes import AuthTypeEnum
 from src.llm_auth import llm_get_auth_type, llm_get_user_name_and_model
 from src.token_usage_database import get_token_usage
-from src.task_database import upsert_scanpy_task, select_scanpy_task
+from src.database.task_database import upsert_scanpy_task, select_scanpy_task
 
 def get_rag_agent_prompts() -> List[str]:
     return [
@@ -60,7 +60,7 @@ def convert_ipynb_to_html(json_str: str):
     nb_node = nbformat.reads(json_str, as_version=4)
     nb_node = assign_cell_ids(nb_node)
     c = Config()
-    c.HTMLExporter.exclude_input_prompt = True  # Equivalent to --no-prompt
+    # c.HTMLExporter.exclude_input_prompt = True  # Equivalent to --no-prompt
     c.HTMLExporter.template_name = "cellid-template"        # Use 'lab' template; replace with your custom template name if needed
     html_exporter = HTMLExporter(config=c)
     (body, resources) = html_exporter.from_notebook_node(nb_node)

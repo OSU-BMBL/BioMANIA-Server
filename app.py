@@ -32,6 +32,7 @@ from src.datatypes import (
     RagDocumentDeleteModel, 
     RagNewDocumentPostModel,
     TokenUsagePostModel,
+    UploadFilePostModel,
 )
 from src.document_embedder import (
     get_all_documents,

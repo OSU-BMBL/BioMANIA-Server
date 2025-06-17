@@ -1,7 +1,8 @@
 
 import pytest
-from src.task_database import upsert_scanpy_task, select_scanpy_task
+from src.database.task_database import upsert_scanpy_task, select_scanpy_task
 import uuid
+from unittest.mock import patch, MagicMock
 
 def test_task_database():
     task_id = uuid.uuid4().hex

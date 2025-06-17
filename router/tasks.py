@@ -8,7 +8,7 @@ from werkzeug.utils import secure_filename
 
 from src.constants import DATA_FOLDER, ERROR_INVALID_INPUT, ERROR_OK, ERROR_TASK_DATA_NOT_FOUND, ERROR_TASK_NOT_FOUND, ERROR_UNKNOWN
 from src.utils import allowed_file, convert_ipynb_to_html
-from src.task_database import select_scanpy_task
+from src.database.task_database import select_scanpy_task
 
 logger = logging.getLogger(__name__)
 

@@ -28,6 +28,10 @@ class RagNewDocumentPostModel(BaseModel):
     filename: str
     ragConfig: str
 
+class UploadFilePostModel(BaseModel):
+    tmpFile: str
+    filename: str
+
 class RagAllDocumentsPostModel(BaseModel):
     connectionArgs: ConnectionArgs
     docIds: Optional[List[str]] = None
